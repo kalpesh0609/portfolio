@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#D8B4FE" />
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="24" fill="#09070C" />
+  <rect width="96" height="96" x="2" y="2" rx="22" fill="none" stroke="url(#grad)" stroke-width="2" opacity="0.6" />
+  <text x="50" y="62" font-family="'Geist', 'Segoe UI', sans-serif" font-size="38" font-weight="800" fill="url(#grad)" text-anchor="middle" letter-spacing="-1">KR</text>
+</svg>
