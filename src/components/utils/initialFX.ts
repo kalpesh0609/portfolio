@@ -1,10 +1,15 @@
-import { SplitText } from "gsap-trial/SplitText";
+import { SplitText } from "./SplitTextHelper";
 import gsap from "gsap";
 import { smoother } from "../Navbar";
+import { ScrollSmoother } from "./ScrollSmoother";
 
 export function initialFX() {
   document.body.style.overflowY = "auto";
-  smoother.paused(false);
+  if (smoother) {
+    smoother.paused(false);
+  } else {
+    ScrollSmoother.get()?.paused(false);
+  }
   document.getElementsByTagName("main")[0].classList.add("main-active");
   gsap.to("body", {
     backgroundColor: "#09070C",
@@ -12,7 +17,7 @@ export function initialFX() {
     delay: 1,
   });
 
-  var landingText = new SplitText(
+  const landingText = new SplitText(
     [
       ".landing-info h3",
       ".landing-intro h2",
