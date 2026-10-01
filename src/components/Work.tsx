@@ -1,153 +1,307 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./styles/Work.css";
-import WorkImage from "./WorkImage";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
 import { portfolioData, Project } from "../data/portfolioData";
-import { MdInfoOutline, MdClose, MdCheckCircle, MdOutlineSensors, MdOutlineSchedule } from "react-icons/md";
+import {
+  MdInfoOutline,
+  MdClose,
+  MdCheckCircle,
+  MdOutlineSensors,
+  MdOutlineSchedule,
+  MdChevronLeft,
+  MdChevronRight,
+  MdZoomIn,
+} from "react-icons/md";
 
-gsap.registerPlugin(useGSAP);
+interface ProjectCardProps {
+  project: Project;
+  onOpenDetails: (project: Project) => void;
+  onOpenLightbox: (project: Project, index: number) => void;
+}
+
+const ProjectCard = ({ project, onOpenDetails, onOpenLightbox }: ProjectCardProps) => {
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  const screenshots =
+    project.screenshots && project.screenshots.length > 0
+      ? project.screenshots
+      : [{ url: project.image, caption: project.title }];
+
+  const currentScreenshot = screenshots[activeImageIndex] || screenshots[0];
+
+  return (
+    <article className="project-card" aria-label={project.title}>
+      {/* 1. Project Screenshot Gallery */}
+      <div className="project-gallery-wrap">
+        <div
+          className="project-main-image-container"
+          onClick={() => onOpenLightbox(project, activeImageIndex)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onOpenLightbox(project, activeImageIndex);
+            }
+          }}
+          aria-label={`Enlarge ${project.title} screenshot`}
+        >
+          <img
+            src={currentScreenshot.url}
+            alt={currentScreenshot.caption || `${project.title} screenshot`}
+            className="project-main-image"
+            loading="lazy"
+          />
+          <div className="project-image-zoom-badge" aria-hidden="true">
+            <MdZoomIn />
+            <span>Click to enlarge</span>
+          </div>
+        </div>
+
+        {screenshots.length > 1 && (
+          <div
+            className="project-thumbnails-gallery"
+            role="tablist"
+            aria-label={`${project.title} screenshot gallery`}
+          >
+            {screenshots.map((s, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className={`project-thumbnail-btn ${
+                  idx === activeImageIndex ? "active" : ""
+                }`}
+                onClick={() => setActiveImageIndex(idx)}
+                aria-label={`View screenshot ${idx + 1}: ${
+                  s.caption || project.title
+                }`}
+                aria-selected={idx === activeImageIndex}
+                role="tab"
+              >
+                <img src={s.url} alt={`Thumbnail ${idx + 1}`} loading="lazy" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 2. Card Content */}
+      <div className="project-card-body">
+        <div className="project-meta-row">
+          <span className="project-number">{project.number}</span>
+          <div className="project-heading-block">
+            <div className="project-title-badge-row">
+              <h3 className="project-title">{project.title}</h3>
+              {project.badge && (
+                <span className="project-badge">{project.badge}</span>
+              )}
+            </div>
+            <span className="project-category">{project.category}</span>
+          </div>
+        </div>
+
+        {project.coreConcept && (
+          <div className="project-core-concept">
+            <span>"{project.coreConcept}"</span>
+          </div>
+        )}
+
+        <p className="project-description">{project.description}</p>
+
+        <div className="project-tech-block">
+          <span className="project-tech-label">Technologies:</span>
+          <div className="work-tags-container">
+            {project.technologies.map((tech, idx) => (
+              <span key={idx} className="work-tag-pill">
+                {tech}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Card Footer */}
+      <div className="project-card-footer">
+        <button
+          type="button"
+          onClick={() => onOpenDetails(project)}
+          className="project-action-btn project-action-btn-primary"
+          data-cursor="disable"
+        >
+          <MdInfoOutline />
+          <span>View Details</span>
+        </button>
+        <span className="project-status-badge">{project.status}</span>
+      </div>
+    </article>
+  );
+};
+
+interface LightboxState {
+  project: Project;
+  index: number;
+}
 
 const Work = () => {
   const { projects } = portfolioData;
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [lightbox, setLightbox] = useState<LightboxState | null>(null);
 
-  useGSAP(() => {
-    if (window.innerWidth <= 1024) return;
+  const currentLightboxScreenshots =
+    lightbox && lightbox.project.screenshots && lightbox.project.screenshots.length > 0
+      ? lightbox.project.screenshots
+      : lightbox
+      ? [{ url: lightbox.project.image, caption: lightbox.project.title }]
+      : [];
 
-    let translateX: number = 0;
-
-    function setTranslateX() {
-      const box = document.getElementsByClassName("work-box");
-      if (!box || box.length === 0) return;
-      const container = document.querySelector(".work-container");
-      if (!container || !box[0].parentElement) return;
-
-      const rectLeft = container.getBoundingClientRect().left;
-      const rect = box[0].getBoundingClientRect();
-      const parentWidth = box[0].parentElement.getBoundingClientRect().width;
-      const padding: number =
-        parseInt(window.getComputedStyle(box[0]).padding) / 2 || 40;
-      translateX = rect.width * box.length - (rectLeft + parentWidth) + padding;
-    }
-
-    setTranslateX();
-
-    const timeline = gsap.timeline({
-      scrollTrigger: {
-        trigger: ".work-section",
-        start: "top top",
-        end: `+=${Math.max(translateX, 400)}`,
-        scrub: true,
-        pin: true,
-        id: "work",
-        invalidateOnRefresh: true,
-      },
+  const handleLightboxPrev = () => {
+    if (!lightbox || currentLightboxScreenshots.length <= 1) return;
+    setLightbox((prev) => {
+      if (!prev) return null;
+      const prevIndex =
+        (prev.index - 1 + currentLightboxScreenshots.length) %
+        currentLightboxScreenshots.length;
+      return { ...prev, index: prevIndex };
     });
+  };
 
-    timeline.to(".work-flex", {
-      x: -translateX,
-      ease: "none",
+  const handleLightboxNext = () => {
+    if (!lightbox || currentLightboxScreenshots.length <= 1) return;
+    setLightbox((prev) => {
+      if (!prev) return null;
+      const nextIndex = (prev.index + 1) % currentLightboxScreenshots.length;
+      return { ...prev, index: nextIndex };
     });
+  };
 
-    const handleResize = () => {
-      setTranslateX();
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (lightbox) {
+          setLightbox(null);
+        } else if (selectedProject) {
+          setSelectedProject(null);
+        }
+      } else if (lightbox && currentLightboxScreenshots.length > 1) {
+        if (e.key === "ArrowLeft") {
+          handleLightboxPrev();
+        } else if (e.key === "ArrowRight") {
+          handleLightboxNext();
+        }
+      }
     };
-    window.addEventListener("resize", handleResize);
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      timeline.kill();
-      ScrollTrigger.getById("work")?.kill();
-    };
-  }, []);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightbox, selectedProject, currentLightboxScreenshots.length]);
 
   return (
-    <section className="work-section" id="work" aria-label="Featured Projects">
-      <div className="work-container section-container">
-        <div className="work-header-wrap">
-          <span className="work-header-badge">Featured Work</span>
-          <h2>
-            Featured <span>Projects</span>
-          </h2>
-          <p className="work-header-sub">
-            Practical development projects focusing on disaster-response routing, mobility mapping, and interactive meeting interfaces.
-          </p>
-        </div>
-
-        <div className="work-flex">
-          {projects.map((project) => (
-            <article className="work-box" key={project.id} aria-label={project.title}>
-              <div className="work-info">
-                <div className="work-title">
-                  <h3>{project.number}</h3>
-
-                  <div className="work-heading-group">
-                    <div className="work-title-badge-row">
-                      <h4>{project.title}</h4>
-                      {project.badge && (
-                        <span className="work-badge">{project.badge}</span>
-                      )}
-                    </div>
-                    <p className="work-category">{project.category}</p>
-                  </div>
-                </div>
-
-                {project.coreConcept && (
-                  <div className="work-core-quote">
-                    <span>"{project.coreConcept}"</span>
-                  </div>
-                )}
-
-                <p className="work-description">{project.description}</p>
-
-                <div className="work-tech-section">
-                  <h5>Technologies Explored:</h5>
-                  <div className="work-tags-container">
-                    {project.technologies.map((tech, tIdx) => (
-                      <span key={tIdx} className="work-tag-pill">
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="work-links-row">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedProject(project)}
-                    className="work-action-btn work-action-btn-primary"
-                    data-cursor="disable"
-                  >
-                    <MdInfoOutline />
-                    <span>View Details</span>
-                  </button>
-                  <span className="work-status-badge">
-                    {project.status}
-                  </span>
-                </div>
-              </div>
-
-              <WorkImage
-                image={project.image}
-                alt={`${project.title} screenshot`}
-                link=""
-              />
-            </article>
-          ))}
-        </div>
+    <section className="work-section section-container" id="work" aria-label="My Projects">
+      {/* 1. Centered Section Heading */}
+      <div className="work-header-wrap">
+        <span className="work-header-badge">Featured Work</span>
+        <h2>
+          My <span>Projects</span>
+        </h2>
+        <p className="work-header-sub">
+          A collection of applications I've designed and developed.
+        </p>
       </div>
 
-      {/* Project Details Modal */}
+      {/* 2. Systematic Project Cards Grid */}
+      <div className="projects-grid">
+        {projects.map((project) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            onOpenDetails={setSelectedProject}
+            onOpenLightbox={(proj, idx) => setLightbox({ project: proj, index: idx })}
+          />
+        ))}
+      </div>
+
+      {/* 3. Enlarged Screenshot Lightbox Modal */}
+      {lightbox && currentLightboxScreenshots.length > 0 && (
+        <div
+          className="screenshot-lightbox-backdrop"
+          onClick={() => setLightbox(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${lightbox.project.title} Screenshot Preview`}
+        >
+          <div
+            className="screenshot-lightbox-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="lightbox-close-btn"
+              onClick={() => setLightbox(null)}
+              aria-label="Close enlarged preview"
+            >
+              <MdClose />
+            </button>
+
+            <div className="lightbox-image-wrap">
+              <img
+                src={currentLightboxScreenshots[lightbox.index]?.url}
+                alt={
+                  currentLightboxScreenshots[lightbox.index]?.caption ||
+                  `${lightbox.project.title} enlarged screenshot`
+                }
+                className="lightbox-main-img"
+              />
+
+              {currentLightboxScreenshots.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    className="lightbox-nav-btn lightbox-prev-btn"
+                    onClick={handleLightboxPrev}
+                    aria-label="Previous screenshot"
+                  >
+                    <MdChevronLeft />
+                  </button>
+                  <button
+                    type="button"
+                    className="lightbox-nav-btn lightbox-next-btn"
+                    onClick={handleLightboxNext}
+                    aria-label="Next screenshot"
+                  >
+                    <MdChevronRight />
+                  </button>
+                </>
+              )}
+            </div>
+
+            <div className="lightbox-footer">
+              <div className="lightbox-caption">
+                <h4>{lightbox.project.title}</h4>
+                {currentLightboxScreenshots[lightbox.index]?.caption && (
+                  <p>{currentLightboxScreenshots[lightbox.index].caption}</p>
+                )}
+              </div>
+              {currentLightboxScreenshots.length > 1 && (
+                <span className="lightbox-counter">
+                  {lightbox.index + 1} / {currentLightboxScreenshots.length}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Project Details In-Depth Modal */}
       {selectedProject && (
-        <div className="project-modal-backdrop" onClick={() => setSelectedProject(null)}>
+        <div
+          className="project-modal-backdrop"
+          onClick={() => setSelectedProject(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${selectedProject.title} Details`}
+        >
           <div
             className="project-modal-card"
             onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-label={`${selectedProject.title} Details`}
           >
             <button
               type="button"
@@ -159,10 +313,14 @@ const Work = () => {
             </button>
 
             <div className="project-modal-header">
-              <span className="project-modal-number">{selectedProject.number}</span>
+              <span className="project-modal-number">
+                {selectedProject.number}
+              </span>
               <div>
                 <h3>{selectedProject.title}</h3>
-                <p className="project-modal-category">{selectedProject.category}</p>
+                <p className="project-modal-category">
+                  {selectedProject.category}
+                </p>
               </div>
             </div>
 
@@ -192,44 +350,52 @@ const Work = () => {
               <ul className="project-feature-list">
                 {selectedProject.implementedFeatures.map((feat, idx) => (
                   <li key={idx}>
-                    <span className="feature-check" aria-hidden="true">✓</span>
+                    <span className="feature-check" aria-hidden="true">
+                      ✓
+                    </span>
                     <span>{feat}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {selectedProject.simulatedFeatures && selectedProject.simulatedFeatures.length > 0 && (
-              <div className="project-modal-box project-modal-simulated">
-                <h4 className="simulated-header">
-                  <MdOutlineSensors /> Simulated Capabilities (Under Testing):
-                </h4>
-                <ul className="project-feature-list">
-                  {selectedProject.simulatedFeatures.map((feat, idx) => (
-                    <li key={idx}>
-                      <span className="feature-sim-dot" aria-hidden="true">•</span>
-                      <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {selectedProject.simulatedFeatures &&
+              selectedProject.simulatedFeatures.length > 0 && (
+                <div className="project-modal-box project-modal-simulated">
+                  <h4 className="simulated-header">
+                    <MdOutlineSensors /> Simulated Capabilities (Under Testing):
+                  </h4>
+                  <ul className="project-feature-list">
+                    {selectedProject.simulatedFeatures.map((feat, idx) => (
+                      <li key={idx}>
+                        <span className="feature-sim-dot" aria-hidden="true">
+                          •
+                        </span>
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-            {selectedProject.plannedFeatures && selectedProject.plannedFeatures.length > 0 && (
-              <div className="project-modal-box project-modal-planned">
-                <h4 className="planned-header">
-                  <MdOutlineSchedule /> Planned / Ongoing Enhancements:
-                </h4>
-                <ul className="project-feature-list">
-                  {selectedProject.plannedFeatures.map((feat, idx) => (
-                    <li key={idx}>
-                      <span className="feature-plan-dot" aria-hidden="true">→</span>
-                      <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {selectedProject.plannedFeatures &&
+              selectedProject.plannedFeatures.length > 0 && (
+                <div className="project-modal-box project-modal-planned">
+                  <h4 className="planned-header">
+                    <MdOutlineSchedule /> Planned / Ongoing Enhancements:
+                  </h4>
+                  <ul className="project-feature-list">
+                    {selectedProject.plannedFeatures.map((feat, idx) => (
+                      <li key={idx}>
+                        <span className="feature-plan-dot" aria-hidden="true">
+                          →
+                        </span>
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
             <div className="project-modal-tech">
               <h4>Technologies & Stacks:</h4>

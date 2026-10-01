@@ -1,3 +1,8 @@
+export interface ProjectScreenshot {
+  url: string;
+  caption?: string;
+}
+
 export interface Project {
   id: string;
   number: string;
@@ -13,6 +18,7 @@ export interface Project {
   simulatedFeatures?: string[];
   plannedFeatures?: string[];
   image: string;
+  screenshots?: ProjectScreenshot[];
   githubUrl?: string;
   liveDemoUrl?: string;
 }
@@ -191,13 +197,13 @@ export const portfolioData: PortfolioData = {
       id: "resqroute",
       number: "01",
       title: "ResQRoute",
-      category: "SIH Disaster-Management & Evacuation Project",
+      category: "Disaster Management & Emergency Evacuation",
       badge: "SIH Problem Statement: SIH26191",
       coreConcept: "Shortest route does not always mean safest route.",
       problemStatement:
         "Developed for Smart India Hackathon problem statement SIH26191, addressing hazard-based red zones, carrying-capacity assessment, and immediate relocation needs for vulnerable habitations during emergencies.",
       description:
-        "An intelligent disaster-response and evacuation platform designed to help people identify safer relocation routes and suitable shelters during emergencies.",
+        "A disaster-response application designed to help people find safer evacuation routes and suitable shelters during emergencies.",
       status: "Active Development",
       technologies: [
         "Kotlin",
@@ -227,18 +233,24 @@ export const portfolioData: PortfolioData = {
       plannedFeatures: [
         "Expanded multi-hazard automated red-zone threat calculation",
       ],
-      image: "/images/resqroute.jpg",
+      image: "/images/projects/resqroute/resqroute-evacuation-map.jpg",
+      screenshots: [
+        {
+          url: "/images/projects/resqroute/resqroute-evacuation-map.jpg",
+          caption: "Live Hazard-Aware Evacuation Map & Routing View",
+        },
+      ],
       githubUrl: "",
       liveDemoUrl: "",
     },
     {
       id: "zoom-clone",
       number: "02",
-      title: "Zoom Clone Meeting Platform",
-      category: "Interactive Meeting Platform",
+      title: "Zoom Clone",
+      category: "Video Conferencing & Communication",
       badge: "Web Video Interface",
       description:
-        "A meeting-platform project inspired by video-conferencing applications, focused on creating a convenient digital meeting experience.",
+        "A video-conferencing application inspired by Zoom, featuring an interface for online meetings and real-time communication.",
       status: "Prototype",
       technologies: [
         "React",
@@ -255,7 +267,25 @@ export const portfolioData: PortfolioData = {
         "Interactive meeting controls toolbar (mute, video toggle, reactions)",
         "Side panel design exploration for meeting assistance and summary notes",
       ],
-      image: "/images/zoom_ai.jpg",
+      image: "/images/projects/zoom-clone/zoom-clone-dashboard.png",
+      screenshots: [
+        {
+          url: "/images/projects/zoom-clone/zoom-clone-dashboard.png",
+          caption: "Meeting Hub PRO — Dashboard & Meeting Controls",
+        },
+        {
+          url: "/images/projects/zoom-clone/zoom-clone-lobby.png",
+          caption: "Pre-Meeting Lobby — Audio/Video Verification & Host Controls",
+        },
+        {
+          url: "/images/projects/zoom-clone/zoom-clone-share-invite.png",
+          caption: "Share Meeting Link & Invite Modal with Quick Share Channels",
+        },
+        {
+          url: "/images/projects/zoom-clone/zoom-clone-features.png",
+          caption: "Engineered for Seamless Collaboration — Feature Capabilities",
+        },
+      ],
       githubUrl: "",
       liveDemoUrl: "",
     },

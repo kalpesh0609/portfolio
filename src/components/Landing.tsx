@@ -32,11 +32,11 @@ const Landing = ({ children }: PropsWithChildren) => {
       <section className="landing-section" id="landingDiv" aria-label="Introduction">
         <div className="landing-container">
           <div className="landing-intro">
-            <h2>Hello! I'm a</h2>
+            <h2>Hello!</h2>
             <h1>
-              FULL-STACK
+              KALPESH
               <br />
-              <span>DEVELOPER</span>
+              <span>ROUNDHAL</span>
             </h1>
             <p className="landing-tagline">
               {personal.heroHeading}
@@ -46,12 +46,9 @@ const Landing = ({ children }: PropsWithChildren) => {
           <div className="landing-info">
             <h3>Passionate</h3>
             <h2 className="landing-info-h2">
-              <div className="landing-h2-1">Software</div>
-              <div className="landing-h2-2">Full-Stack</div>
-            </h2>
-            <h2>
-              <div className="landing-h2-info">Developer</div>
-              <div className="landing-h2-info-1">Engineer</div>
+              FULL STACK
+              <br />
+              <span className="landing-info-sub">ENGINEER</span>
             </h2>
 
             <p className="landing-short-intro">
